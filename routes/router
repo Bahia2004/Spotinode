@@ -1,0 +1,54 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const db = require('../db'); // Add this line to import the database connection
+const hp = require('../controller/HpController');
+
+// Set up Multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname); // Rename file to avoid collisions
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Root route
+router.get('/', (req, res) => {
+    // Fetch songs from the database
+    const query = 'SELECT * FROM music';
+    
+    db.query(query, (err, songs) => { // Using 'db' here after importing it
+        if (err) {
+            console.error('Error fetching songs:', err);
+            res.status(500).send('Server error');
+        } else {
+            res.render('index', { songs: songs }); // Pass the songs data to index.ejs
+        }
+    });
+});
+
+// Route to display the form to add a song
+router.get('/insert-music', (req, res) => {
+    res.render('insert-music'); // Render the insert music form
+});
+
+// Route to handle form submission and file upload
+router.post('/insert-music', upload.single('file'), (req, res) => {
+    const { title, artist, album, genre } = req.body;
+    const filePath = `/uploads/${req.file.filename}`;
+    
+    // Debugging output
+    console.log("Form data received: ", { title, artist, album, genre });
+    console.log("File uploaded to: ", filePath);
+
+    // Insert music information into the database
+    hp.music(title, artist, album, genre, filePath);
+
+    res.send('Music file uploaded and inserted successfully!');
+});
+
+module.exports = router;

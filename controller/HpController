@@ -1,0 +1,17 @@
+const db = require('../db');
+
+exports.music = (title, artist, album, genre, filePath) => {
+    const query = `INSERT INTO music (title, artist, album, genre, file_path) VALUES (?, ?, ?, ?, ?)`;
+    const values = [title, artist, album, genre, filePath];
+  
+    // Debugging output
+    console.log("Inserting music into the database with values: ", values);
+
+    db.query(query, values, (err, results) => {
+      if (err) {
+        console.error('Error inserting music file into the database:', err);
+      } else {
+        console.log('Music file inserted successfully!');
+      }
+    });
+};
